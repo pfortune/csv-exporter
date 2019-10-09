@@ -1,90 +1,113 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const API_KEY = "4TQU66HTCC74MR96BRQY44E6ZB6RIKJU";
-  const FORMAT = "output_format=JSON";
-  const URL = `https://www.boardgamer.ie/api`;
-  const orders = {};
+const API_KEY = '4TQU66HTCC74MR96BRQY44E6ZB6RIKJU';
+const FORMAT = 'output_format=JSON';
+const URL = `https://www.boardgamer.ie/api`;
 
-  // fetch the order from api and return json
-  function getOrder() {
-    let id = document.querySelector(".orderid").value;
-    let promise = fetch(`${URL}/orders/${id}/?ws_key=${API_KEY}&${FORMAT}`);
+//Returns the IDs of every order with a particular status
+function getOrderIds() {
+  return fetch(
+    `${URL}/orders/?ws_key=${API_KEY}&filter[current_state]=[2]&${FORMAT}&rand=${Math.floor(
+      Math.random() * 1000000
+    )}`
+  ).then(res => {
+    return res.json();
+  });
+}
 
-    promise
-      .then(res => res.json())
-      .then(processedResponse => {
-        createOrderObject(processedResponse.order);
-      });
-  }
+function getOrderDetails(id) {
+  return fetch(`${URL}/orders/${id}/?ws_key=${API_KEY}&${FORMAT}`)
+    .then(res => {
+      return res.json();
+    })
+    .then(res => {
+      return {
+        id: res.order.id,
+        id_address_delivery: res.order.id_address_delivery,
+        id_carrier: res.order.id_carrier,
+        id_customer: res.order.id_customer
+      };
+    });
+}
 
-  function getAddress() {
-    let promise = fetch(
-      `${URL}/address/${orders.addressId}/?ws_key=${API_KEY}&${FORMAT}`
-    );
-    promise
-      .then(res => res.json())
-      .then(processedResponse => {
-        addAddressToOrderObject(processedResponse.address);
-      });
-  }
+function getAddressDetails(id) {
+  return fetch(`${URL}/addresses/${id}/?ws_key=${API_KEY}&${FORMAT}`)
+    .then(res => {
+      return res.json();
+    })
+    .then(res => {
+      return res.address;
+    })
+    .then(res => {
+      return {
+        id_state: res.id_state,
+        company: res.company,
+        firstname: res.firstname,
+        lastname: res.lastname,
+        address1: res.address1,
+        address2: res.address2,
+        postcode: res.postcode,
+        city: res.city,
+        other: res.other,
+        phone: res.phone,
+        phone_mobile: res.phone_mobile
+      };
+    });
+}
 
-  function createOrderObject(order) {
-    orders.orderId = order.id;
-    orders.addressId = order.id_address_invoice;
-    orders.carrierId = order.id_carrier;
-    orders.invoiceDate = order.invoice_date;
+function getCarrierDetails(id) {
+  return fetch(`${URL}/carriers/${id}/?ws_key=${API_KEY}&${FORMAT}`)
+    .then(res => {
+      return res.json();
+    })
+    .then(res => {
+      return { id_carrier: res.carrier.id, carrier: res.carrier.name };
+    });
+}
 
-    getAddress();
-  }
+function getCustomerDetails(id) {
+  return fetch(`${URL}/customers/${id}/?ws_key=${API_KEY}&${FORMAT}`)
+    .then(res => {
+      return res.json();
+    })
+    .then(res => {
+      return {
+        email: res.customer.email
+      };
+    });
+}
 
-  function addAddressToOrderObject(address) {
-    orders.firstname = address.firstname;
-    orders.lastname = address.lastname;
-  }
+function getStateDetails(id) {
+  return fetch(`${URL}/states/${id}/?ws_key=${API_KEY}&${FORMAT}`)
+    .then(res => {
+      return res.json();
+    })
+    .then(res => {
+      return {
+        state: res.state.name
+      };
+    });
+}
 
-  function printOrder(data) {
-    const pre = document.createElement("pre");
-    const orderDetails = document.querySelector(".order_details");
-    pre.innerText = data;
-    orderDetails.appendChild(pre);
-
-    //console.log(pre);
-  }
-
-  //   promise
-  //       .then(res => req.json())
-  //       .then(processedResponse => {
-  //           console.log(processedResponse.message);
-  //       });
-
-  // processAddress(addressRes.address);
-
-  document.querySelector(".import").addEventListener("click", getOrder);
-
-  // const addressRes = {
-  //   address: {
-  //     id: 1257,
-  //     id_customer: "1075",
-  //     id_manufacturer: "0",
-  //     id_supplier: "0",
-  //     id_warehouse: "0",
-  //     id_country: "26",
-  //     id_state: "318",
-  //     alias: "My address",
-  //     company: "",
-  //     lastname: "Czaczyk",
-  //     firstname: "Roland",
-  //     vat_number: "",
-  //     address1: "67 Bremore Pastures Way",
-  //     address2: "",
-  //     postcode: "",
-  //     city: "Balbriggan",
-  //     other: "",
-  //     phone: "",
-  //     phone_mobile: "0862136788",
-  //     dni: "",
-  //     deleted: "0",
-  //     date_add: "2015-02-05 23:20:30",
-  //     date_upd: "2015-02-05 23:20:30"
-  //   }
-  // };
+getOrderIds().then(data => {
+  data.orders.forEach(order => {
+    getOrderDetails(order.id).then(orderDetails => {
+      return Promise.all([
+        getCustomerDetails(orderDetails.id_customer),
+        getAddressDetails(orderDetails.id_address_delivery),
+        getCarrierDetails(orderDetails.id_carrier),
+        orderDetails
+      ])
+        .then(([customer, address, carrier]) => {
+          return { ...customer, ...address, ...carrier, ...orderDetails };
+        })
+        .then(order => {
+          return Promise.all([getStateDetails(order.id_state), order]);
+        })
+        .then(([state, order]) => {
+          return { ...state, ...order };
+        })
+        .then(res => console.log(res));
+    });
+  });
 });
+
+// document.querySelector('.status').addEventListener('click', getOrderIds);
