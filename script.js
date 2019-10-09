@@ -112,18 +112,22 @@ function getCustomerOrderDetails(orderDetails) {
     });
 }
 
+function sortOrders(order) {
+  if (order.id_carrier === '193') {
+    order.address1 = order.address2 = order.city = order.company = order.state =
+      'Collection';
+  }
+
+  return order;
+}
+
 // sets it all in motion
 function start() {
   getOrderIds().then(data => {
     data.orders.forEach(order => {
       getOrderDetails(order.id).then(orderDetails => {
         getCustomerOrderDetails(orderDetails).then(res => {
-          if (res.id_carrier === '193') {
-            res.address1 = res.address2 = res.city = res.company = res.state =
-              'Collection';
-          }
-
-          console.log(res);
+          console.log(sortOrders(res));
         });
       });
     });
