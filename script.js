@@ -13,6 +13,7 @@ function getOrderIds() {
   });
 }
 
+// fetches products and various ids needed for future calls
 function getOrderDetails(id) {
   return fetch(`${URL}/orders/${id}/?ws_key=${API_KEY}&${FORMAT}`)
     .then(res => {
@@ -29,6 +30,7 @@ function getOrderDetails(id) {
     });
 }
 
+// fetches address details, uses id_address_delivery from getOrderDetails
 function getAddressDetails(id) {
   return fetch(`${URL}/addresses/${id}/?ws_key=${API_KEY}&${FORMAT}`)
     .then(res => {
@@ -54,6 +56,7 @@ function getAddressDetails(id) {
     });
 }
 
+// fetches carrier information, uses id_carrier from getOrderDetails
 function getCarrierDetails(id) {
   return fetch(`${URL}/carriers/${id}/?ws_key=${API_KEY}&${FORMAT}`)
     .then(res => {
@@ -64,6 +67,7 @@ function getCarrierDetails(id) {
     });
 }
 
+// fetches the customer email address, uses id_customer from getOrderDetails
 function getCustomerDetails(id) {
   return fetch(`${URL}/customers/${id}/?ws_key=${API_KEY}&${FORMAT}`)
     .then(res => {
@@ -76,6 +80,7 @@ function getCustomerDetails(id) {
     });
 }
 
+// fetches the name of state/county, uses id_state from getAddressDetails
 function getStateDetails(id) {
   return fetch(`${URL}/states/${id}/?ws_key=${API_KEY}&${FORMAT}`)
     .then(res => {
@@ -88,6 +93,7 @@ function getStateDetails(id) {
     });
 }
 
+// combines the customer, address, carrier, state, and orderdetails together
 function getCustomerOrderDetails(orderDetails) {
   return Promise.all([
     getCustomerDetails(orderDetails.id_customer),
@@ -106,6 +112,7 @@ function getCustomerOrderDetails(orderDetails) {
     });
 }
 
+// sets it all in motion
 function start() {
   getOrderIds().then(data => {
     data.orders.forEach(order => {
