@@ -88,25 +88,29 @@ function getStateDetails(id) {
     });
 }
 
-getOrderIds().then(data => {
-  data.orders.forEach(order => {
-    getOrderDetails(order.id).then(orderDetails => {
-      return Promise.all([
-        getCustomerDetails(orderDetails.id_customer),
-        getAddressDetails(orderDetails.id_address_delivery),
-        getCarrierDetails(orderDetails.id_carrier),
-        orderDetails
-      ])
-        .then(([customer, address, carrier]) => {
-          return { ...customer, ...address, ...carrier, ...orderDetails };
-        })
-        .then(order => {
-          return Promise.all([getStateDetails(order.id_state), order]);
-        })
-        .then(([state, order]) => {
-          return { ...state, ...order };
-        })
-        .then(res => {
+function getCustomerOrderDetails(orderDetails) {
+  return Promise.all([
+    getCustomerDetails(orderDetails.id_customer),
+    getAddressDetails(orderDetails.id_address_delivery),
+    getCarrierDetails(orderDetails.id_carrier),
+    orderDetails
+  ])
+    .then(([customer, address, carrier]) => {
+      return { ...customer, ...address, ...carrier, ...orderDetails };
+    })
+    .then(order => {
+      return Promise.all([getStateDetails(order.id_state), order]);
+    })
+    .then(([state, order]) => {
+      return { ...state, ...order };
+    });
+}
+
+function start() {
+  getOrderIds().then(data => {
+    data.orders.forEach(order => {
+      getOrderDetails(order.id).then(orderDetails => {
+        getCustomerOrderDetails(orderDetails).then(res => {
           if (res.id_carrier === '193') {
             res.address1 = res.address2 = res.city = res.company = res.state =
               'Collection';
@@ -114,8 +118,9 @@ getOrderIds().then(data => {
 
           console.log(res);
         });
+      });
     });
   });
-});
+}
 
-// document.querySelector('.status').addEventListener('click', getOrderIds);
+document.querySelector('.status').addEventListener('click', start);
