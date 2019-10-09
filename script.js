@@ -23,7 +23,8 @@ function getOrderDetails(id) {
         id: res.order.id,
         id_address_delivery: res.order.id_address_delivery,
         id_carrier: res.order.id_carrier,
-        id_customer: res.order.id_customer
+        id_customer: res.order.id_customer,
+        products: res.order.associations.order_rows
       };
     });
 }
@@ -47,8 +48,8 @@ function getAddressDetails(id) {
         postcode: res.postcode,
         city: res.city,
         other: res.other,
-        phone: res.phone,
-        phone_mobile: res.phone_mobile
+        phone: res.phone.replace(/\D+/g, ''),
+        phone_mobile: res.phone_mobile.replace(/\D+/g, '')
       };
     });
 }
@@ -105,7 +106,14 @@ getOrderIds().then(data => {
         .then(([state, order]) => {
           return { ...state, ...order };
         })
-        .then(res => console.log(res));
+        .then(res => {
+          if (res.id_carrier === '193') {
+            res.address1 = res.address2 = res.city = res.company = res.state =
+              'Collection';
+          }
+
+          console.log(res);
+        });
     });
   });
 });
