@@ -7,9 +7,7 @@ async function getOrders() {
   const orders = await getOrderIds();
 
   orders.forEach(order => {
-    getOrderDetails(order.id).then(orderDetails => {
-      customerOrderDetails(orderDetails);
-    });
+    getOrderDetails(order.id);
   });
 }
 
@@ -40,7 +38,8 @@ function getOrderDetails(id) {
         id_customer: res.order.id_customer,
         products: res.order.associations.order_rows
       };
-    });
+    })
+    .then(order => customerOrderDetails(order));
 }
 
 // fetches address details, uses id_address_delivery from getOrderDetails
