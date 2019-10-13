@@ -1,10 +1,16 @@
-const API_KEY = '4TQU66HTCC74MR96BRQY44E6ZB6RIKJU';
-const FORMAT = 'output_format=JSON';
+const API_KEY = "4TQU66HTCC74MR96BRQY44E6ZB6RIKJU";
+const FORMAT = "output_format=JSON";
 const URL = `https://www.boardgamer.ie/api`;
 
 //
-function getOrders() {
-  getOrderIds().then(res => console.log(res));
+async function getOrders() {
+  const orders = await getOrderIds();
+
+  orders.forEach(order => {
+    getOrderDetails(order.id).then(orderDetails => {
+      customerOrderDetails(orderDetails);
+    });
+  });
 }
 
 //Returns the IDs of every order with a particular status
@@ -57,8 +63,8 @@ function getAddressDetails(id) {
         postcode: res.postcode,
         city: res.city,
         other: res.other,
-        phone: res.phone.replace(/\D+/g, ''),
-        phone_mobile: res.phone_mobile.replace(/\D+/g, '')
+        phone: res.phone.replace(/\D+/g, ""),
+        phone_mobile: res.phone_mobile.replace(/\D+/g, "")
       };
     });
 }
@@ -101,7 +107,7 @@ function getStateDetails(id) {
 }
 
 // combines the customer, address, carrier, state, and orderdetails together
-function CustomerOrderDetails(orderDetails) {
+function customerOrderDetails(orderDetails) {
   return Promise.all([
     getCustomerDetails(orderDetails.id_customer),
     getAddressDetails(orderDetails.id_address_delivery),
@@ -117,37 +123,25 @@ function CustomerOrderDetails(orderDetails) {
     .then(([state, order]) => {
       return { ...state, ...order };
     })
-    .then(orders => sortOrders(orders));
+    .then(orders => {
+      assignCollectionOrders(orders);
+    });
 }
 
 // if an order has the carrier with id 193 it is marked for collection
-function sortOrders(order) {
-  const COLLECTION = '193';
+function assignCollectionOrders(order) {
+  const COLLECTION = "193";
   if (order.id_carrier === COLLECTION) {
     order.address1 = order.address2 = order.city = order.company = order.state =
-      'Collection';
+      "Collection";
   }
-
+  console.log(order);
   return order;
-}
-
-// sets it all in motion
-function start() {
-  getOrders();
-  //.then(data => {
-  //   data.orders.forEach(order => {
-  //     getOrderDetails(order.id).then(orderDetails => {
-  //       getCustomerOrderDetails(orderDetails).then(res => {
-  //         console.log(sortOrders(res));
-  //       });
-  //     });
-  //   });
-  // });
 }
 
 function buildCSV() {
   let csv =
-    'Company,Firstname,Lastname,Order,Date,Quantity,Customer,Address1,Address2,Address3,City,State,Postcode,Other,Country,Email,Sku,Phone\n';
+    "Company,Firstname,Lastname,Order,Date,Quantity,Customer,Address1,Address2,Address3,City,State,Postcode,Other,Country,Email,Sku,Phone\n";
 }
 
-document.querySelector('.status').addEventListener('click', start);
+document.querySelector(".status").addEventListener("click", getOrders);
