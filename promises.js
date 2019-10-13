@@ -5,10 +5,13 @@ const URL = `https://www.boardgamer.ie/api`;
 //
 async function getOrders() {
   const orders = await getOrderIds();
+  const promises = [];
 
   orders.forEach(order => {
-    getOrderDetails(order.id);
+    promises.push(getOrderDetails(order.id));
   });
+
+  return Promise.all(promises).then(order => console.log(order));
 }
 
 //Returns the IDs of every order with a particular status
@@ -39,7 +42,7 @@ function getOrderDetails(id) {
         products: res.order.associations.order_rows
       };
     })
-    .then(order => customerOrderDetails(order));
+    .then(order => combineOrderDetails(order));
 }
 
 // fetches address details, uses id_address_delivery from getOrderDetails
@@ -106,7 +109,7 @@ function getStateDetails(id) {
 }
 
 // combines the customer, address, carrier, state, and orderdetails together
-function customerOrderDetails(orderDetails) {
+function combineOrderDetails(orderDetails) {
   return Promise.all([
     getCustomerDetails(orderDetails.id_customer),
     getAddressDetails(orderDetails.id_address_delivery),
@@ -123,7 +126,7 @@ function customerOrderDetails(orderDetails) {
       return { ...state, ...order };
     })
     .then(orders => {
-      assignCollectionOrders(orders);
+      return assignCollectionOrders(orders);
     });
 }
 
@@ -134,7 +137,7 @@ function assignCollectionOrders(order) {
     order.address1 = order.address2 = order.city = order.company = order.state =
       "Collection";
   }
-  console.log(order);
+
   return order;
 }
 
