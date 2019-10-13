@@ -65,8 +65,8 @@ function getAddressDetails(id) {
         postcode: res.postcode,
         city: res.city,
         other: res.other,
-        phone: res.phone.replace(/\D+/g, ""),
-        phone_mobile: res.phone_mobile.replace(/\D+/g, "")
+        phone: formatPhoneNumber(res.phone.replace),
+        phone_mobile: formatPhoneNumber(res.phone_mobile)
       };
     });
 }
@@ -139,6 +139,10 @@ function assignCollectionOrders(order) {
   }
 
   return order;
+}
+
+function formatPhoneNumber(number) {
+  return number.replace(/\D+/g, "");
 }
 
 function buildCSV() {
